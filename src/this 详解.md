@@ -232,7 +232,7 @@ fn.call(context, p1, p2) // 先不说 apply
   前面两种是 JS 设计者投喂的语法糖，可以等价的转换为第三种形式
 
 ```JavaScript
-fn.call(undefind, p1, p2)
+fn.call(undefined, p1, p2)
 obj.child.method.call(obj.child, p1, p2)
 ```
 
