@@ -91,7 +91,7 @@ export default {
 
 里面有段代码是`new Vue({..})` 这是啥
 
-还就得 jQuery 实例吗，我们通过 `const $div = new jQuery('#xxx')` 创建一个 jQuery 实例
+还记得 jQuery 实例吗，我们通过 `const $div = new jQuery('#xxx')` 创建一个 jQuery 实例
 
 不过 jQuery 通过一些技巧把 `new` 给省略了
 
@@ -105,7 +105,7 @@ export default {
 
 打开浏览器发现控制台有报错提示， "run-time only...”，这是什么意思
 
-于是我们得知 Vue 存在完整版与运行时版
+查询Vue 文档安装篇，我们得知 Vue 存在完整版与运行时版的区别
 
 接下来我们通过 3 种使用 Vue实例的方式来充分理解什么是 Vue 实例，以及体验一下 Vue 这两种版本的区别
 
@@ -115,7 +115,7 @@ export default {
 
 这种方式需要使用「Vue完整版」
 
-可以通过 CDN 或 `import..` 引入 vue.js / vue.min.js
+将 vue.js / vue.min.js 的 CDN 链接引入到 HTML 中
 
 #### 方法二：用 JS 构建视图
 
