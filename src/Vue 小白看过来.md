@@ -115,12 +115,207 @@ export default {
 
 这种方式需要使用「Vue完整版」
 
-将 vue.js / vue.min.js 的 CDN 链接引入到 HTML 中
+引入 vue.js / vue.min.js 的 CDN 链接
+
+这个完整版怎么用呢
+
+我们可以直接把 main.js 中的代码全部注释然后 `console.log(Vue)` ，可以在控制台得到 Vue
+
+```HTML
+ <!-- index.html -->
+ <div id="app"> 
+   {{n}}
+ </div> 
+```
+
+```HTML
+// main.js
+new Vue({
+  // 可以直接从 HTML 里面获取到这个元素
+  el: "#app", // 即我要对页面中的 id=app 的这个 div 元素进行一个 MVC 封装
+  data: {
+    n: 1
+  }
+}) 
+```
+
+这样可以在页面中看到一个 1
+
+这个例子的关注点在于：我的视图没有写在 JS 代码中，而是我把长什么样子直接写在页面当中
+
+这就是完整版的功能：它可以直接在页面里直接把这个 n 变成 1
 
 #### 方法二：用 JS 构建视图
 
 这种方式需要使用「Vue runtime 版本」
 
+将 index.html 中的 vue.js/vue.min.js 替换成 vue.runtime.js/vue.runtime.min.js
+
+还是可以在控制台中得到 Vue，**但是**页面中的 1 没有了
+
+这就是完整版和非完整版的区别：非完整版（runtime）不支持从 HTML 中获取视图
+
+```JavaScript
+new Vue({
+  el: '#app',
+  template: `
+    <div>{{n}}</div> // 外面必须要有一层包裹
+  `,
+  data: {
+    n: 1
+  }
+})
+```
+
+即使这样写，也不支持；当然，完整版也支持这样写
+
+非完整版，只要你是从 HTML 里面产生视图都不支持，不管你写在HTML 中还是写在 JS 的 template 中
+
+完整版，只要你从 HTML 中产生视图都支持，写在HTML、JS 里的 template 里都行
+
+那这个非完整版连在页面中显示一个 n 都不行，要它干嘛
+
+事实上，非完整版想要在页面中渲染视图需要这样写
+
+```JavaScript
+new Vue({
+  el: '#app',
+  render(h){ // 这个参数是 Vue 传给你的，h 即 createElement
+    return h('div', this.n)
+  },
+  data: {
+    n: 1
+  }
+})
+// 页面中成功的出现了 1 
+```
+
+如果我需要 +1 怎么办，那就需要加按钮并绑定点击事件监听函数了，怎么写呢？
+
+```JavaScript
+new Vue({
+  el: '#app',
+  render(h){
+    return h('div', [this.n, h('button', { on: { click: this.add } }, '+1')])
+  },
+  data: {
+    n: 1
+  },
+  methods: {
+    add(){
+      this.n += 1
+    }
+  }
+})
+```
+
+即你必须要用一个 h 函数去把所有的元素给构造出来
+
+---
+
+可能到这里，小白可能会觉得完整版更好用，那非完整版存在的意义是什么呢
+
+虽然使用完整版可以通过 HTML 得到视图
+
+而非完整版却要使用非常麻烦的 h 的方式，但是这种方式却是对的，为什么呢
+
+首先你有一段 HTML，它是字符串，里面可能混杂了 `{{n}}` ，"html {{n}}"
+
+Vue 就需要把这段东西，变成 "html 1"，怎么变呢，直接替换吗，不太好
+
+因为里面可能很多复杂的语句比如 v-if、v-for等，这些复杂语句，你用直接正则替换是做不到的
+
+于是 Vue需要写一个编译器，它可以把含有复杂语句或占位符的这些东西变成真实的DOM 节点
+
+于是，当你下次点击加一按钮的时候，它就知道你要改的是n
+
+于是它就去改 DOM 节点，而不是重新把之前的东西编译一遍
+
+这个东西就做编译器，有个特点就是复杂，进一步的特点就是占用代码体积
+
+根据 Vue 文档说明，非完整版比完整版要想小大约40%的体积
+
+即非完整版没有编译器，因此它也没有办法把HTML 变成节点
+
+我们想要体积更小的版本，但是它却没有通过 HTML 获取视图的功能，怎么办呢
+
+使用Webpack
+
 #### 方法三：使用 vue-loader
 
+我在一开始写的时候写成 HTML 的形式
+
+`<div>{{n}}</div>`
+
+然后Webpack通过 vue-loader 
+
+把它转换成 `h("div", this.n)` 
+
+而我这个 vue-loader 需要让用户下载吗，不需要
+
+我在 yarn build 的时候就已经转换完了，这样就可以让用户下载只支持 h 函数的版本
+
+这样我们就做到了两个事情：写HTML 形式的代码，用户下载的是 h 函数版本的代码，中间用 vue-loader 来转换一下
+
+这样用户对 vue 的依赖就是可以使用体积小30%的不完整版
+
+那我们怎么使用 vue-loader 呢？
+
+写一个Demo.vue 的文件
+
+```JavaScript
+// Demo.vue
+<template> // 视图
+  <div class="red">{{n}}</div>
+  <button @click="add">+1</button>
+</template> 
+
+<script> // 视图外的其他选项
+ export default {
+   data(){ // 如果你使用 vue-loader，这里的 data 必须写成函数的形式
+     return {
+       n: 0
+     }
+   },
+   methods: {
+     add(){
+       this.n += 1
+     }
+   }
+ }
+</script>
+
+<style scoped> // CSS
+.red {
+  color: red;
+}
+</style> 
+```
+
+然后 vue-loader 就可以这个文件变成一个对象，然后我们就可以使用它了
+
+```JavaScript
+// main.js
+import Demo form './Demo.vue'
+console.log(Demo) // 可以一下打印出什么
+console.log(Demo.render.toString())
+ new Vue({
+   el: '#app',
+   render(h){
+     return h(Demo)
+   }
+ })
+```
+
+打印出来的是一个对象，里面有一个 render ，render 里面是转换之后的代码
+
+所以我们在 .vue 文件里面不需要自己写 render
+
+这就是 Webpack 带来的东西，你可以以任意的方式组织一个对象（比如 .vue 文件）
+
+只需要你最后可以通过一个 loader 把它还原成这个对象即可
+
+以上称作 Vue 单文件组件
+
 ## 目标三：理解 Vue 的完整版与运行时版的区别
+
